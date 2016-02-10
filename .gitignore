@@ -17,6 +17,8 @@
 .idea/*.xml
 akkaPOC.iml
 
+#ignore anything that is pushed to target
+target/*
 
 #Ignoring class files
 *.class

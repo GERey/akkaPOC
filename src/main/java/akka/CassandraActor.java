@@ -37,6 +37,7 @@ public class CassandraActor extends UntypedActor {
 
             ResultSet results = sessionQueryContainer.getCassandraKeyspaceSession().execute(sessionQueryContainer.getCassandraQuery());
 
+
             getSender().tell( results,getSelf() );
 
             //prints out the results in the actor.

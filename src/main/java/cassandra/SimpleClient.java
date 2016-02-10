@@ -73,7 +73,7 @@ public class SimpleClient {
         cluster.close();
     }
 
-    public Session getSession(){
+    public static Session getSession(){
         if(session == null){
             init();
             return session;

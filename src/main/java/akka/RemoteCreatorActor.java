@@ -1,4 +1,4 @@
-package cassandra;/*
+package akka;/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,34 +16,23 @@ package cassandra;/*
  */
 
 
-import java.io.Serializable;
-
-import com.datastax.driver.core.Session;
-
-
-public class SessionQueryContainer implements Serializable {
+import akka.actor.ActorRef;
+import akka.actor.Props;
+import akka.actor.UntypedActor;
+import cassandra.SessionQueryContainer;
 
 
-    public Session cassandraKeyspaceSession;
-    public String cassandraQuery;
+public class RemoteCreatorActor extends UntypedActor{
 
-    public String getCassandraQuery() {
-        return cassandraQuery;
+
+    @Override
+    public void onReceive( final Object message ) {
+        if(message instanceof SessionQueryContainer){
+            ActorRef cassandraWorker = getContext().actorOf( Props.create( CassandraActor.class ) );
+            cassandraWorker.tell( message,getSelf() );
+        }
+        else{
+            unhandled( message );
+        }
     }
-
-
-    public void setCassandraQuery( final String cassandraQuery ) {
-        this.cassandraQuery = cassandraQuery;
-    }
-
-
-    public Session getCassandraKeyspaceSession() {
-        return cassandraKeyspaceSession;
-    }
-
-
-    public void setCassandraKeyspaceSession( final Session cassandraKeyspaceSession ) {
-        this.cassandraKeyspaceSession = cassandraKeyspaceSession;
-    }
-
 }

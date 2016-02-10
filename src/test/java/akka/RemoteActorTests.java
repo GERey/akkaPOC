@@ -16,54 +16,50 @@ package akka;/*
  */
 
 
-/*
-The object of this test is to verify that we can read from cassandra using the CassandraActor
- */
-
-
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.datastax.driver.core.ResultSet;
+import com.typesafe.config.ConfigFactory;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
-import akka.serialization.Serialization;
-import akka.serialization.SerializationExtension;
-import akka.serialization.Serializer;
 import akka.testkit.JavaTestKit;
 import cassandra.SessionQueryContainer;
 import cassandra.SimpleClient;
 import scala.concurrent.duration.Duration;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 
 
-public class akkaCassandraReadTest {
+public class RemoteActorTests {
 
     public static SimpleClient cassandraClient;
-    static ActorSystem system;
+    //static ActorSystem system;
 
     @BeforeClass
     public static void setup() {
         cassandraClient = new SimpleClient();
         cassandraClient.init();
-        system = ActorSystem.create("system" );
+        //system = ActorSystem.create("system" );
 
     }
 
     @AfterClass
     public static void teardown() {
-        JavaTestKit.shutdownActorSystem( system );
+       // JavaTestKit.shutdownActorSystem( system );
         cassandraClient.close();
     }
 
     @Test
-    public void testCassandraRead(){
+    public void testRemoteCassandraWorkerSystem(){
 
+        final ActorSystem cassandraWorkerSystem = startCassandraRemoteWorkerSystem();
+        final ActorSystem creatorSystem = startCreatorSystem();
 
         final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
         sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
@@ -71,18 +67,20 @@ public class akkaCassandraReadTest {
                 "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
 
 
-        new JavaTestKit( system ) {{
-            final Props cassandraActorProps = Props.create( CassandraActor.class );
-            final ActorRef cassandraActorRef = system.actorOf( cassandraActorProps );
+
+
+        new JavaTestKit( creatorSystem) {{
+            final ActorRef creationActor = creatorSystem.actorOf( Props.create( RemoteCreatorActor.class ) ,"creationActor" );
+
 
             new Within(duration( "2 seconds" )){
 
                 protected void run() {
-                    cassandraActorRef.tell( sessionQueryContainer,getRef() );
-
+                    creationActor.tell( sessionQueryContainer,getRef() );
 
 
                     ResultSet returnedResultSets = ( ResultSet ) receiveOne( Duration.create("2 seconds" ) );
+                    assertNotSame( null,returnedResultSets );
                     assertEquals(1,returnedResultSets.all().size() ) ;
 
                 }
@@ -91,32 +89,12 @@ public class akkaCassandraReadTest {
 
     }
 
-    @Test
-    public void serializationTest(){
+    public static ActorSystem startCassandraRemoteWorkerSystem(){
+        return ActorSystem.create("CassandraRemoteWorkerSystem", ConfigFactory.load("cassandra"));
+    }
 
-        // Get the Serialization Extension
-        Serialization serialization = SerializationExtension.get(system );
-
-
-        // Have something to serialize
-        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
-        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
-        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
-                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
-
-
-        // Find the Serializer for it
-        Serializer serializer = serialization.findSerializerFor(sessionQueryContainer );
-
-        // Turn it into bytes
-        byte[] bytes = serializer.toBinary(sessionQueryContainer);
-
-        // Turn it back into an object,
-        // the nulls are for the class manifest and for the classloader
-        String back = (String) serializer.fromBinary(bytes);
-
-        // Voilá!
-        assertEquals(sessionQueryContainer, back);
+    public static ActorSystem startCreatorSystem(){
+        return ActorSystem.create( "RemoteCreationSystem",ConfigFactory.load("application") );
     }
 
 
