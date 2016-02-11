@@ -46,13 +46,11 @@ public class RemoteActorTests {
     public static void setup() {
         cassandraClient = new SimpleClient();
         cassandraClient.init();
-        //system = ActorSystem.create("system" );
 
     }
 
     @AfterClass
     public static void teardown() {
-       // JavaTestKit.shutdownActorSystem( system );
         cassandraClient.close();
     }
 
@@ -79,6 +77,7 @@ public class RemoteActorTests {
 
                 protected void run() {
                     creationActor.tell( "Blop blop",getRef() );
+
 
                     Object returnedResultSets =  receiveOne( Duration.create("32 seconds" ) );
                     if(returnedResultSets == null){
