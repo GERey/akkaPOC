@@ -34,6 +34,7 @@ import scala.concurrent.duration.Duration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 
 public class RemoteActorTests {
@@ -58,30 +59,34 @@ public class RemoteActorTests {
     @Test
     public void testRemoteCassandraWorkerSystem(){
 
-        final ActorSystem cassandraWorkerSystem = startCassandraRemoteWorkerSystem();
+
         final ActorSystem creatorSystem = startCreatorSystem();
+        final ActorSystem cassandraWorkerSystem = startCassandraRemoteWorkerSystem();
 
-        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
-        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
-        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
-                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
+//        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
+//        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
+//        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
+//                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
 
 
 
 
-        new JavaTestKit( creatorSystem) {{
+        new JavaTestKit(creatorSystem) {{
             final ActorRef creationActor = creatorSystem.actorOf( Props.create( RemoteCreatorActor.class ) ,"creationActor" );
 
 
-            new Within(duration( "2 seconds" )){
+            new Within(duration( "30 seconds" )){
 
                 protected void run() {
-                    creationActor.tell( sessionQueryContainer,getRef() );
+                    creationActor.tell( "Blop blop",getRef() );
+
+                    Object returnedResultSets =  receiveOne( Duration.create("32 seconds" ) );
+                    if(returnedResultSets == null){
+                        fail("should have returned some text");
+                    }
+                    assertEquals("returned Correctly", returnedResultSets ) ;
 
 
-                    ResultSet returnedResultSets = ( ResultSet ) receiveOne( Duration.create("2 seconds" ) );
-                    assertNotSame( null,returnedResultSets );
-                    assertEquals(1,returnedResultSets.all().size() ) ;
 
                 }
             };

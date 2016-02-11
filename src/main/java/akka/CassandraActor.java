@@ -16,40 +16,18 @@ package akka;/*
  */
 
 
-import com.datastax.driver.core.ResultSet;
-import com.datastax.driver.core.Row;
-
 import akka.actor.UntypedActor;
-import cassandra.SessionQueryContainer;
-import cassandra.SimpleClient;
 
 
 public class CassandraActor extends UntypedActor {
-    //SimpleClient cassandraClient = new SimpleClient();
 
     @Override
     public void onReceive(Object msg) {
 
-        if (msg instanceof SessionQueryContainer ){
-            SessionQueryContainer sessionQueryContainer = (SessionQueryContainer) msg;
+        if (msg instanceof String){
 
-            //sessionQueryContainer.getCassandraKeyspaceSession().execute( sessionQueryContainer.getCassandraQuery() );
+            getSender().tell("returned Correctly",getSelf());
 
-            ResultSet results = sessionQueryContainer.getCassandraKeyspaceSession().execute(sessionQueryContainer.getCassandraQuery());
-
-
-            getSender().tell( results,getSelf() );
-
-            //prints out the results in the actor.
-//            System.out.println(String.format("%-30s\t%-20s\t%-20s\n%s", "title", "album", "artist",
-//                    "-------------------------------+-----------------------+--------------------"));
-//            for (Row row : results) {
-//                System.out.println(String.format("%-30s\t%-20s\t%-20s", row.getString("title"),
-//                        row.getString("album"),  row.getString("artist")));
-//            }
-//            System.out.println();
-
-            getContext().stop(getSelf());
         }
         else
             unhandled(msg);

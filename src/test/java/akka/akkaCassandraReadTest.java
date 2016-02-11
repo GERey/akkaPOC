@@ -65,11 +65,14 @@ public class akkaCassandraReadTest {
     public void testCassandraRead(){
 
 
-        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
-        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
-        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
-                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
+//        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
+//        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
+//        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
+//                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
 
+
+        final String cassandraQueryString = "SELECT * FROM simplex.playlists " +
+                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;";
 
         new JavaTestKit( system ) {{
             final Props cassandraActorProps = Props.create( CassandraActor.class );
@@ -78,7 +81,7 @@ public class akkaCassandraReadTest {
             new Within(duration( "2 seconds" )){
 
                 protected void run() {
-                    cassandraActorRef.tell( sessionQueryContainer,getRef() );
+                    cassandraActorRef.tell( cassandraQueryString,getRef() );
 
 
 
@@ -99,24 +102,28 @@ public class akkaCassandraReadTest {
 
 
         // Have something to serialize
-        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
-        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
-        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
-                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
+//        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
+//        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
+//        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
+//                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
+
+
+        final String cassandraQueryString = "SELECT * FROM simplex.playlists " +
+                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;";
 
 
         // Find the Serializer for it
-        Serializer serializer = serialization.findSerializerFor(sessionQueryContainer );
+        Serializer serializer = serialization.findSerializerFor(cassandraQueryString );
 
         // Turn it into bytes
-        byte[] bytes = serializer.toBinary(sessionQueryContainer);
+        byte[] bytes = serializer.toBinary(cassandraQueryString);
 
         // Turn it back into an object,
         // the nulls are for the class manifest and for the classloader
         String back = (String) serializer.fromBinary(bytes);
 
         // Voilá!
-        assertEquals(sessionQueryContainer, back);
+        assertEquals(cassandraQueryString, back);
     }
 
 

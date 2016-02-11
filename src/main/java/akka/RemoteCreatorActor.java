@@ -17,6 +17,7 @@ package akka;/*
 
 
 import akka.actor.ActorRef;
+import akka.actor.InternalActorRef;
 import akka.actor.Props;
 import akka.actor.UntypedActor;
 import cassandra.SessionQueryContainer;
@@ -24,12 +25,12 @@ import cassandra.SessionQueryContainer;
 
 public class RemoteCreatorActor extends UntypedActor{
 
-
     @Override
     public void onReceive( final Object message ) {
-        if(message instanceof SessionQueryContainer){
-            ActorRef cassandraWorker = getContext().actorOf( Props.create( CassandraActor.class ) );
-            cassandraWorker.tell( message,getSelf() );
+
+        if(message instanceof String){
+            ActorRef cassandraWorker = getContext().actorOf( Props.create( CassandraActor.class ));
+            cassandraWorker.forward( message, getContext() );
         }
         else{
             unhandled( message );
