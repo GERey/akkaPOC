@@ -16,6 +16,10 @@ package akka;/*
  */
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -31,10 +35,12 @@ import akka.testkit.JavaTestKit;
 import cassandra.SessionQueryContainer;
 import cassandra.SimpleClient;
 import scala.concurrent.duration.Duration;
+import scala.math.Ordering;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
@@ -43,17 +49,17 @@ public class RemoteActorTests {
     public static SimpleClient cassandraClient;
     //static ActorSystem system;
 
-    @BeforeClass
-    public static void setup() {
-        cassandraClient = new SimpleClient();
-        cassandraClient.init();
-
-    }
-
-    @AfterClass
-    public static void teardown() {
-        cassandraClient.close();
-    }
+//    @BeforeClass
+//    public static void setup() {
+//        cassandraClient = new SimpleClient();
+//        cassandraClient.init();
+//
+//    }
+//
+//    @AfterClass
+//    public static void teardown() {
+//        cassandraClient.close();
+//    }
 
     @Test
     public void testRemoteCassandraWorkerSystem(){
@@ -67,19 +73,72 @@ public class RemoteActorTests {
             final ActorRef creationActor = creatorSystem.actorOf( Props.create( RemoteCreatorActor.class ) ,"creationActor" );
 
 
-            new Within(duration( "30 seconds" )){
+            new Within(duration( "3 seconds" )){
 
                 protected void run() {
-                    creationActor.tell( "Blop blop",getRef() );
+
+                    creationActor.tell( "Blop blop", getRef() );
 
 
-                    Object returnedResultSets =  receiveOne( Duration.create("32 seconds" ) );
+                    Object returnedResultSets =  receiveOne( Duration.create("3 seconds" ) );
                     if(returnedResultSets == null){
                         fail("should have returned some text");
                     }
                     assertEquals("returned Correctly", returnedResultSets ) ;
 
 
+                }
+            };
+        }};
+
+    }
+
+
+    @Test
+    public void testThreadPool(){
+
+
+        final ActorSystem creatorSystem = startCreatorSystem();
+        final ActorSystem cassandraWorkerSystem = startCassandraRemoteWorkerSystem();
+
+
+        new JavaTestKit(creatorSystem) {{
+            final ActorRef creationActor = creatorSystem.actorOf( Props.create( RemoteCreatorActor.class ) ,"creationActor" );
+
+
+            new Within(duration( "3 seconds" )){
+
+                protected void run() {
+
+                    //Send the string in 5 times to see if the actor system will round robin through the remotes
+
+                    for(int i = 0; i<5;i++) {
+                        creationActor.tell( "test string", getRef() );
+                    }
+
+                    Object[] returnedMessages = receiveN( 5, duration( "3 seconds" ));
+                    assertEquals( 5,returnedMessages.length );
+                    String[] stringArrayOfActorNames = new String[5];
+                    List<String> actorList = new ArrayList<>(  );
+
+
+                    for(int i= 0;i<5;i++){
+                        actorList.add( returnedMessages[i].toString());
+                    }
+
+
+                    //below verifies that 5 differently named threads are created and that they can be accounted for kinda?
+                    for(int i = 0; i<5;i++){
+                        String threadSubname = "c"+(i+1);
+
+                        for(String actorName : actorList){
+                            if(actorName.contains( threadSubname )){
+                                actorList.remove( actorName );
+                                break;
+                            }
+                        }
+                    }
+                    assertEquals( 0,actorList.size() );
 
                 }
             };

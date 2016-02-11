@@ -23,10 +23,10 @@ public class CassandraActor extends UntypedActor {
 
     @Override
     public void onReceive(Object msg) {
-
+        System.out.println( getSelf().toString() );
         if (msg instanceof String){
 
-            getSender().tell("returned Correctly",getSelf());
+            getSender().tell(getSelf().toString(),getSelf());
 
         }
         else
