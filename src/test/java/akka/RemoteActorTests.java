@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import com.datastax.driver.core.ResultSet;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigValue;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
@@ -61,13 +62,6 @@ public class RemoteActorTests {
         final ActorSystem creatorSystem = startCreatorSystem();
         final ActorSystem cassandraWorkerSystem = startCassandraRemoteWorkerSystem();
 
-//        final SessionQueryContainer sessionQueryContainer = new SessionQueryContainer();
-//        sessionQueryContainer.setCassandraKeyspaceSession( cassandraClient.getSession() );
-//        sessionQueryContainer.setCassandraQuery( "SELECT * FROM simplex.playlists " +
-//                "WHERE id = 2cc9ccb7-6221-4ccb-8387-f22b6a1b354d;" );
-
-
-
 
         new JavaTestKit(creatorSystem) {{
             final ActorRef creationActor = creatorSystem.actorOf( Props.create( RemoteCreatorActor.class ) ,"creationActor" );
@@ -91,6 +85,12 @@ public class RemoteActorTests {
             };
         }};
 
+    }
+
+    @Test
+    public void testConfigurationLoading(){
+        String workerString =  ConfigFactory.load( "application" ).getObject( "akka" ).toConfig().getObject( "actor" ).toConfig().getObject( "deployment" ).toConfig().getObject( "/creationActor/\"*\"" ).toConfig().getString( "remote" );
+        assertEquals("akka.tcp://CassandraRemoteWorkerSystem@127.0.0.1:2552",workerString);
     }
 
     public static ActorSystem startCassandraRemoteWorkerSystem(){
