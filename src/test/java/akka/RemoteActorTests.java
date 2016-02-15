@@ -119,7 +119,7 @@ public class RemoteActorTests {
                     Object[] returnedMessages = receiveN( 5, duration( "3 seconds" ));
                     assertEquals( 5,returnedMessages.length );
                     String[] stringArrayOfActorNames = new String[5];
-                    List<String> actorList = new ArrayList<>(  );
+                    List<String> actorList = new ArrayList(  );
 
 
                     for(int i= 0;i<5;i++){
