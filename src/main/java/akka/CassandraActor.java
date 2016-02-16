@@ -23,14 +23,17 @@ public class CassandraActor extends UntypedActor {
 
     @Override
     public void onReceive(Object msg) {
-        System.out.println( getSelf().toString() );
-        if (msg instanceof String){
+        //System.out.println( getSelf().toString() );
 
+        if (msg instanceof String){
+            System.out.println("Found instanace of string");
             getSender().tell(getSelf().toString(),getSelf());
 
         }
-        else
-            unhandled(msg);
+        else {
+            System.out.println("Unhandled");
+            unhandled( msg );
+        }
     }
 
 }

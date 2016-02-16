@@ -31,6 +31,7 @@ import com.typesafe.config.ConfigValue;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.Props;
+import akka.routing.ConsistentHashingRouter;
 import akka.testkit.JavaTestKit;
 import cassandra.SessionQueryContainer;
 import cassandra.SimpleClient;
@@ -47,19 +48,6 @@ import static org.junit.Assert.fail;
 public class RemoteActorTests {
 
     public static SimpleClient cassandraClient;
-    //static ActorSystem system;
-
-//    @BeforeClass
-//    public static void setup() {
-//        cassandraClient = new SimpleClient();
-//        cassandraClient.init();
-//
-//    }
-//
-//    @AfterClass
-//    public static void teardown() {
-//        cassandraClient.close();
-//    }
 
     @Test
     public void testRemoteCassandraWorkerSystem(){
@@ -90,9 +78,7 @@ public class RemoteActorTests {
                 }
             };
         }};
-
     }
-
 
     @Test
     public void testThreadPool(){
@@ -112,33 +98,34 @@ public class RemoteActorTests {
 
                     //Send the string in 5 times to see if the actor system will round robin through the remotes
 
-                    for(int i = 0; i<5;i++) {
-                        creationActor.tell( "test string", getRef() );
+                    for(int i = 0; i<1;i++) {
+                        creationActor.tell("hello" ,getRef() );
                     }
 
-                    Object[] returnedMessages = receiveN( 5, duration( "3 seconds" ));
-                    assertEquals( 5,returnedMessages.length );
+                    Object[] returnedMessages = receiveN( 1, duration( "3 seconds" ));
+                    assertEquals( 1,returnedMessages.length );
                     String[] stringArrayOfActorNames = new String[5];
-                    List<String> actorList = new ArrayList(  );
+
+                    //List<String> actorList = new ArrayList<>(  );
 
 
-                    for(int i= 0;i<5;i++){
-                        actorList.add( returnedMessages[i].toString());
-                    }
-
-
-                    //below verifies that 5 differently named threads are created and that they can be accounted for kinda?
-                    for(int i = 0; i<5;i++){
-                        String threadSubname = "c"+(i+1);
-
-                        for(String actorName : actorList){
-                            if(actorName.contains( threadSubname )){
-                                actorList.remove( actorName );
-                                break;
-                            }
-                        }
-                    }
-                    assertEquals( 0,actorList.size() );
+//                    for(int i= 0;i<5;i++){
+//                        actorList.add( returnedMessages[i].toString());
+//                    }
+//
+//
+//                    //below verifies that 5 differently named threads are created and that they can be accounted for kinda?
+//                    for(int i = 0; i<5;i++){
+//                        String threadSubname = "c"+(i+1);
+//
+//                        for(String actorName : actorList){
+//                            if(actorName.contains( threadSubname )){
+//                                actorList.remove( actorName );
+//                                break;
+//                            }
+//                        }
+//                    }
+//                    assertEquals( 0,actorList.size() );
 
                 }
             };
